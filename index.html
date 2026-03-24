@@ -6,26 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Konfigurátor</title>
     <link rel="icon" type="image/png" href="faviconV2%20(1).png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --bg-blue: #a2b7de;
-            --accent-pink: #f84b80;
-            --text-dark: #2d3436;
-            --card-white: #ffffff;
+            --bg: #a2b7de;
+            --accent: #f84b80;
+            --accent-light: rgba(248, 75, 128, 0.08);
+            --text: #1d1d1f;
+            --text2: #86868b;
+            --surface: #f5f5f7;
+            --card: #ffffff;
+            --border: #e8e8ed;
             --radius: 40px;
+            --radius-sm: 14px;
+            --radius-xs: 10px;
         }
 
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0
         }
 
         body {
-            margin: 0;
             overflow: hidden;
-            background-color: var(--bg-blue);
+            background: var(--bg);
             font-family: 'Inter', sans-serif;
-            color: var(--text-dark);
+            color: var(--text)
         }
 
         #main-wrapper {
@@ -34,113 +42,135 @@
             left: 50%;
             transform: translate(-50%, -50%);
             width: 90vw;
-            max-width: 1300px;
-            height: 85vh;
-            background: var(--card-white);
+            max-width: 1400px;
+            height: 88vh;
+            background: var(--card);
             border-radius: var(--radius);
-            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 30px 100px rgba(0, 0, 0, .12);
             z-index: 10;
             display: flex;
-            overflow: hidden;
+            overflow: hidden
         }
 
         #preview-section {
-            flex: 1.2;
+            flex: 1.3;
             position: relative;
-            background: #a2b7de;
-            border-right: 1px solid #f0f2f5;
+            background: var(--bg);
+            border-right: 1px solid var(--border)
         }
 
         #preview-canvas {
             width: 100%;
-            height: 100%;
+            height: 100%
         }
 
         #ui-section {
-            flex: 0.8;
-            padding: 40px;
+            flex: 0.7;
+            padding: 20px 18px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            scrollbar-width: none;
+            gap: 0;
+            scrollbar-width: none
         }
 
         #ui-section::-webkit-scrollbar {
-            display: none;
+            display: none
         }
 
         h1 {
             text-align: center;
             font-weight: 800;
-            font-size: 1.8rem;
+            font-size: 1.2rem;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin: 0 0 30px 0;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--surface);
+            margin-bottom: 0
         }
 
         .section-label {
             text-align: center;
-            font-weight: 800;
+            font-weight: 700;
             text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            margin: 30px 0 15px 0;
-            position: relative;
-            color: #555;
+            font-size: .68rem;
+            letter-spacing: 1.2px;
+            margin: 12px 0 5px;
+            color: var(--text2)
         }
 
         .section-label::after {
             content: '';
             display: block;
-            width: 40px;
-            height: 3px;
-            background: var(--accent-pink);
-            margin: 8px auto 0;
-            border-radius: 2px;
+            width: 32px;
+            height: 2.5px;
+            background: var(--accent);
+            margin: 6px auto 0;
+            border-radius: 2px
         }
 
-        .control-group {
-            margin-bottom: 25px;
+
+        .seg-ctrl {
+            display: flex;
+            position: relative;
+            background: var(--surface);
+            border-radius: var(--radius-xs);
+            padding: 3px;
+            gap: 2px
         }
 
-        input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            border-radius: 5px;
-            background: #f0f0f5;
-            outline: none;
-            margin: 15px 0;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--accent-pink);
+        .seg-btn {
+            flex: 1;
+            padding: 7px 4px;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: .72rem;
+            font-weight: 600;
+            color: var(--text2);
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(248, 75, 128, 0.3);
+            border-radius: 8px;
+            position: relative;
+            z-index: 2;
+            transition: color .25s;
+            white-space: nowrap
         }
 
-        .color-selector {
+        .seg-btn.active {
+            color: var(--text)
+        }
+
+        .seg-indicator {
+            position: absolute;
+            height: calc(100% - 6px);
+            top: 3px;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
+            transition: left .3s cubic-bezier(.4, 0, .2, 1), width .3s cubic-bezier(.4, 0, .2, 1);
+            z-index: 1
+        }
+
+
+        .color-row {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-top: 10px;
+            gap: 14px;
+            margin-top: 6px
         }
 
-        .color-box-wrap {
-            position: relative;
-            width: 44px;
-            height: 44px;
+        .color-wrap {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border: 2px solid #eee;
+            border: 2px solid var(--border);
             padding: 3px;
             cursor: pointer;
+            transition: border-color .2s
+        }
+
+        .color-wrap:hover {
+            border-color: var(--accent)
         }
 
         input[type="color"] {
@@ -151,200 +181,310 @@
             cursor: pointer;
             background: none;
             padding: 0;
-            overflow: hidden;
+            overflow: hidden
         }
 
         input[type="color"]::-webkit-color-swatch-wrapper {
-            padding: 0;
+            padding: 0
         }
 
         input[type="color"]::-webkit-color-swatch {
             border: none;
+            border-radius: 50%
+        }
+
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 4px;
+            background: var(--surface);
+            outline: none;
+            margin: 8px 0
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(248, 75, 128, .25)
+        }
+
+
+        .side-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 12px
+        }
+
+        .side-chip {
+            padding: 6px 14px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            background: #fff;
+            font-family: inherit;
+            font-size: .72rem;
+            font-weight: 600;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all .25s
+        }
+
+        .side-chip:hover {
+            border-color: #ccc
+        }
+
+        .side-chip.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light)
+        }
+
+        .side-chip.has-image::after {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-left: 6px;
+            vertical-align: middle
+        }
+
+
+        .side-editor {
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            animation: fadeSlide .3s ease
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .editor-upload {
+            margin-bottom: 10px
         }
 
         .upload-btn {
             display: block;
-            border: 2px dashed #ddd;
-            padding: 20px;
-            border-radius: 20px;
+            border: 2px dashed var(--border);
+            padding: 14px;
+            border-radius: var(--radius-xs);
             text-align: center;
             cursor: pointer;
-            font-size: 0.85rem;
-            color: #777;
-            transition: all 0.2s;
-            margin-bottom: 10px;
+            font-size: .78rem;
+            color: var(--text2);
+            transition: all .2s;
+            font-weight: 500
         }
 
         .upload-btn:hover {
-            border-color: var(--accent-pink);
-            color: var(--accent-pink);
-            background: rgba(248, 75, 128, 0.02);
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(248, 75, 128, .02)
         }
 
-        .sides-list {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
+        .upload-btn input[type="file"] {
+            display: none
         }
 
-        .side-card {
+        .editor-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .editor-preview {
             display: flex;
             align-items: center;
-            background: #ffffff;
-            border: 2px solid #f8f9fb;
-            border-radius: 16px;
-            padding: 10px 14px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.01);
-            position: relative;
-        }
-
-        .side-card[data-side="top"] {
-            grid-column: span 2;
-        }
-
-        .side-card:hover {
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04);
-            transform: translateY(-1px);
-            border-color: #f0f2f5;
-        }
-
-        .side-card.active {
-            border-color: var(--accent-pink);
+            gap: 10px;
             background: #fff;
-            box-shadow: 0 8px 18px rgba(248, 75, 128, 0.08);
+            border-radius: var(--radius-xs);
+            padding: 8px 12px
         }
 
-        .side-card .label-box {
+        .editor-preview img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            border-radius: 6px;
+            background: var(--surface)
+        }
+
+        .editor-preview .preview-name {
+            font-size: .75rem;
+            font-weight: 600;
+            color: var(--text);
             flex: 1;
-            min-width: 0;
-        }
-
-        .side-card .side-name {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #333;
-            display: block;
-            margin-bottom: 1px;
-            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap
         }
 
-        .side-card .status-indicator {
-            font-size: 0.65rem;
-            color: #aaa;
+        .slider-row .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: .72rem;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: var(--text2)
         }
 
-        .side-card.active .side-name {
-            color: var(--accent-pink);
+        .slider-row .slider-val {
+            color: var(--accent);
+            font-weight: 700
         }
 
-        .side-card.active .status-indicator {
-            color: var(--accent-pink);
-            opacity: 0.7;
+        .effect-pills {
+            display: flex;
+            gap: 6px
         }
 
-        .side-card input {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-            pointer-events: none;
-            margin: 0;
-            padding: 0;
-            border: none;
-        }
-
-        .toggle-switch {
-            width: 32px;
-            height: 18px;
-            background: #e4e6eb;
-            border-radius: 20px;
-            position: relative;
-            transition: 0.3s;
-            flex-shrink: 0;
-        }
-
-        .side-card.active .toggle-switch {
-            background: var(--accent-pink);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 12px;
-            height: 12px;
+        .effect-pill {
+            flex: 1;
+            padding: 7px 4px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
             background: #fff;
-            border-radius: 50%;
-            top: 3px;
-            left: 3px;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: inherit;
+            font-size: .7rem;
+            font-weight: 600;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all .25s;
+            text-align: center
         }
 
-        .side-card.active .toggle-switch::after {
-            left: 17px;
+        .effect-pill:hover {
+            border-color: #ccc
         }
+
+        .effect-pill.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light)
+        }
+
+        .btn-sm-danger {
+            background: none;
+            border: none;
+            color: #bbb;
+            font-size: .7rem;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 4px 0;
+            font-family: inherit;
+            width: 100%;
+            text-align: center;
+            display: block
+        }
+
+        .btn-sm-danger:hover {
+            color: #888
+        }
+
+
+        #inner-lid-section .upload-btn {
+            margin-bottom: 4px
+        }
+
 
         .btn-action {
             width: 100%;
-            padding: 16px;
-            background: var(--accent-pink);
-            color: white;
+            padding: 14px;
+            background: var(--accent);
+            color: #fff;
             border: none;
             border-radius: 30px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: .9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
             cursor: pointer;
-            box-shadow: 0 10px 20px rgba(248, 75, 128, 0.2);
+            box-shadow: 0 8px 20px rgba(248, 75, 128, .2);
             margin-top: auto;
-            transition: transform 0.1s;
+            transition: transform .1s, box-shadow .15s;
+            font-family: inherit
+        }
+
+        .btn-action:hover {
+            box-shadow: 0 12px 28px rgba(248, 75, 128, .3)
         }
 
         .btn-action:active {
-            transform: scale(0.98);
+            transform: scale(.98)
         }
 
-        .btn-danger {
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 0.75rem;
-            text-decoration: underline;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 5px;
-        }
-
-        .btn-danger:hover {
-            color: #888;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        @media (max-width: 900px) {
+        @media(max-width:900px) {
             #main-wrapper {
                 flex-direction: column;
-                height: 95vh;
-            }
-
-            #ui-section {
-                padding: 30px;
-                flex: 1;
+                height: auto;
+                min-height: 100vh;
+                width: 100vw;
+                border-radius: 0;
+                max-width: none;
+                box-shadow: none
             }
 
             #preview-section {
-                flex: 0.7;
+                height: 35vh;
+                flex: none;
+                border-right: none;
+                border-bottom: 1px solid var(--border)
+            }
+
+            #ui-section {
+                padding: 16px;
+                flex: 1
+            }
+
+            h1 {
+                font-size: 1rem;
+                padding-bottom: 4px
+            }
+
+            .section-label {
+                margin: 8px 0 3px;
+                font-size: .62rem
+            }
+
+            .seg-btn {
+                font-size: .65rem;
+                padding: 6px 2px
+            }
+
+            .side-chip {
+                padding: 4px 10px;
+                font-size: .65rem
+            }
+
+            .side-editor {
+                padding: 10px
+            }
+
+            .btn-action {
+                padding: 12px;
+                font-size: .8rem
+            }
+
+            input[type="range"] {
+                margin: 4px 0
             }
         }
     </style>
@@ -357,54 +497,42 @@
         </div>
         <div id="ui-section">
             <h1>Konfigurátor</h1>
-            <div class="section-label">Otevírání</div>
-            <div class="control-group"><input type="range" id="open-slider" min="0" max="150" value="40"></div>
+
+            <div class="section-label">Typ krabičky</div>
+            <div class="seg-ctrl" id="type-ctrl">
+                <div class="seg-indicator" id="type-ind"></div>
+                <button class="seg-btn active" data-type="zaklapeci">Zaklápěcí</button>
+                <button class="seg-btn" data-type="dvoudilna">Dvoudílná</button>
+                <button class="seg-btn" data-type="lahev">Na Láhev</button>
+            </div>
+
+            <div class="section-label">Velikost</div>
+            <div class="seg-ctrl" id="size-ctrl">
+                <div class="seg-indicator" id="size-ind"></div>
+            </div>
+
+            <div class="section-label" id="slider-label">Otevírání</div>
+            <input type="range" id="open-slider" min="0" max="150" value="40">
+
             <div class="section-label">Barva / Pozadí</div>
-            <div class="color-selector">
-                <div class="color-box-wrap" title="Barva krabice"><input type="color" id="box-color" value="#ffffff">
-                </div>
-                <div class="color-box-wrap" title="Barva pozadí scény"><input type="color" id="bg-color"
-                        value="#a2b7de"></div>
+            <div class="color-row">
+                <div class="color-wrap" title="Barva krabice"><input type="color" id="box-color" value="#f84b80"></div>
+                <div class="color-wrap" title="Barva pozadí"><input type="color" id="bg-color" value="#a2b7de"></div>
             </div>
-            <div class="section-label">Vnější Potisk</div>
-            <div class="control-group">
-                <label class="upload-btn" for="ext-file"><span id="ext-status">+ Vybrat grafiku loga</span></label>
-                <input type="file" id="ext-file" accept="image/*">
-                <div class="sides-list">
-                    <label class="side-card active" data-side="top"><input type="checkbox" data-side="top" checked>
-                        <div class="label-box"><span class="side-name">Vrchní strana</span><span
-                                class="status-indicator">Zobrazeno</span></div>
-                        <div class="toggle-switch"></div>
-                    </label>
-                    <label class="side-card active" data-side="front"><input type="checkbox" data-side="front" checked>
-                        <div class="label-box"><span class="side-name">Přední strana</span><span
-                                class="status-indicator">Zobrazeno</span></div>
-                        <div class="toggle-switch"></div>
-                    </label>
-                    <label class="side-card active" data-side="back"><input type="checkbox" data-side="back" checked>
-                        <div class="label-box"><span class="side-name">Zadní strana</span><span
-                                class="status-indicator">Zobrazeno</span></div>
-                        <div class="toggle-switch"></div>
-                    </label>
-                    <label class="side-card active" data-side="left"><input type="checkbox" data-side="left" checked>
-                        <div class="label-box"><span class="side-name">Levý bok</span><span
-                                class="status-indicator">Zobrazeno</span></div>
-                        <div class="toggle-switch"></div>
-                    </label>
-                    <label class="side-card active" data-side="right"><input type="checkbox" data-side="right" checked>
-                        <div class="label-box"><span class="side-name">Pravý bok</span><span
-                                class="status-indicator">Zobrazeno</span></div>
-                        <div class="toggle-switch"></div>
-                    </label>
-                </div>
-                <button class="btn-danger" id="rm-ext" style="display:none">Smazat grafiku</button>
+
+            <div class="section-label">Editor Stran</div>
+            <div id="sides-section">
+                <div class="side-chips" id="side-chips"></div>
+                <div class="side-editor" id="side-editor"></div>
             </div>
-            <div class="section-label">Vnitřek Víka</div>
-            <div class="control-group">
+
+            <div id="inner-lid-section">
+                <div class="section-label">Vnitřek Víka</div>
                 <label class="upload-btn" for="int-file"><span id="int-status">+ Nahrát vnitřní potisk</span></label>
-                <input type="file" id="int-file" accept="image/*">
-                <button class="btn-danger" id="rm-int" style="display:none">Odebrat vnitřní potisk</button>
+                <input type="file" id="int-file" accept="image/*" style="display:none">
+                <button class="btn-sm-danger" id="rm-int" style="display:none">Smazat vnitřní potisk</button>
             </div>
+
             <button class="btn-action" onclick="alert('Krabička uložena do košíku!')">Spočítat</button>
         </div>
     </div>
@@ -412,146 +540,492 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
+
+        const S = 0.1;
+        const TYPES = {
+            zaklapeci: {
+                name: 'Zaklápěcí',
+                sizes: [
+                    { label: '20×15×8', w: 20, d: 15, h: 8 },
+                    { label: '30×20×10', w: 30, d: 20, h: 10 },
+                    { label: '40×30×12', w: 40, d: 30, h: 12 }
+                ],
+                sliderLabel: 'Otevírání', sliderMax: 150
+            },
+            dvoudilna: {
+                name: 'Dvoudílná s víkem',
+                sizes: [
+                    { label: '20×15×8', w: 20, d: 15, h: 8 },
+                    { label: '30×20×10', w: 30, d: 20, h: 10 },
+                    { label: '40×30×12', w: 40, d: 30, h: 12 }
+                ],
+                sliderLabel: 'Zvednutí víka', sliderMax: 100
+            },
+            lahev: {
+                name: 'Na Láhev',
+                sizes: [
+                    { label: '80×80×320 mm', w: 8, d: 8, h: 32 },
+                    { label: '220×200×700 mm', w: 22, d: 20, h: 70 }
+                ],
+                sliderLabel: 'Otevírání', sliderMax: 150
+            }
+        };
+        const EFFECTS = {
+            none: { roughness: 0.9, metalness: 0.0 },
+            matte: { roughness: 1.0, metalness: 0.0 },
+            glossy: { roughness: 0.05, metalness: 0.05 },
+            metallic: { roughness: 0.15, metalness: 0.95 }
+        };
+        const SIDE_NAMES = { top: 'Vrch', front: 'Přední', back: 'Zadní', left: 'Levý', right: 'Pravý' };
+
+
+        let curType = 'zaklapeci', curSize = 1, selectedSide = 'top';
+        const sides = {};
+        Object.keys(SIDE_NAMES).forEach(k => {
+            sides[k] = { image: null, fileName: '', mode: 'logo', scale: 70, posX: 50, posY: 50, effect: 'none', canvas: document.createElement('canvas'), tex: null, roughTex: null, metalTex: null };
+        });
+        let intImage = null, hingeGroup = null, lidGroup = null;
+
+
         const container = document.getElementById('preview-canvas');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xa2b7de);
         const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
-        camera.position.set(2, 2.5, 5);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.outputEncoding = THREE.sRGBEncoding;
         container.appendChild(renderer.domElement);
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
-        dirLight.position.set(5, 10, 8); scene.add(dirLight);
+        controls.dampingFactor = 0.08;
 
-        const W = 2, D = 1.5, H = 0.5, T = 0.025;
-        const sh = H - T, sy = T + sh / 2;
-        const boxModel = new THREE.Group();
-        scene.add(boxModel);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+        const dirL = new THREE.DirectionalLight(0xffffff, 0.7);
+        dirL.position.set(5, 10, 8); scene.add(dirL);
+        const fillL = new THREE.DirectionalLight(0xeef2ff, 0.3);
+        fillL.position.set(-4, 6, -4); scene.add(fillL);
+        const rimL = new THREE.PointLight(0xfff0e6, 0.35);
+        rimL.position.set(0, 3, 6); scene.add(rimL);
 
-        const mats = {
-            base: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
-            top: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
-            bottom: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
-            front: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
-            back: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
-            left: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
-            right: new THREE.MeshStandardMaterial({ roughness: 0.9 })
-        };
 
-        function makeWall(w, h, d, x, y, z, matArray) {
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), matArray);
-            mesh.position.set(x, y, z); boxModel.add(mesh); return mesh;
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        const envScene = new THREE.Scene();
+        envScene.background = new THREE.Color(0xe8ecf0);
+        envScene.add(new THREE.AmbientLight(0xffffff, 1));
+        const ep1 = new THREE.PointLight(0xffffff, 1); ep1.position.set(5, 5, 5); envScene.add(ep1);
+        const ep2 = new THREE.PointLight(0xddeeff, 0.6); ep2.position.set(-5, 3, -5); envScene.add(ep2);
+        const envMap = pmrem.fromScene(envScene, 0, 0.01, 100).texture;
+        scene.environment = envMap;
+        pmrem.dispose();
+
+
+        const mats = { base: new THREE.MeshStandardMaterial({ roughness: 0.9 }) };
+        Object.keys(SIDE_NAMES).forEach(k => {
+            mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.9 });
+        });
+        mats.lidInner = new THREE.MeshStandardMaterial({ roughness: 0.9 });
+
+
+        const boxGroup = new THREE.Group();
+        scene.add(boxGroup);
+
+        function clearBox() {
+            while (boxGroup.children.length) boxGroup.remove(boxGroup.children[0]);
+            hingeGroup = null; lidGroup = null;
         }
 
-        const B = mats.base;
-        makeWall(W, T, D, 0, T / 2, 0, B);
-        makeWall(W, sh, T, 0, sy, D / 2 - T / 2, [B, B, B, B, mats.front, B]);
-        makeWall(W, sh, T, 0, sy, -D / 2 + T / 2, [B, B, B, B, B, mats.back]);
-        makeWall(T, sh, D - 2 * T, -W / 2 + T / 2, sy, 0, [B, mats.left, B, B, B, B]);
-        makeWall(T, sh, D - 2 * T, W / 2 - T / 2, sy, 0, [mats.right, B, B, B, B, B]);
-
-        const hinge = new THREE.Group();
-        hinge.position.set(0, H, -D / 2 + T / 2);
-        boxModel.add(hinge);
-        const lid = new THREE.Mesh(new THREE.BoxGeometry(W, T, D), [B, B, mats.top, mats.bottom, B, B]);
-        lid.position.set(0, T / 2 + 0.001, D / 2 - T / 2); hinge.add(lid);
-
-        const flH = 0.25;
-        function addF(w, h, d, x, y, z) {
-            const p = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), B);
-            p.position.set(x, y, z); hinge.add(p);
+        function addWall(parent, w, h, d, x, y, z, matArr) {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), matArr);
+            m.position.set(x, y, z); parent.add(m); return m;
         }
-        addF(W - 4 * T, flH, T, 0, -flH / 2, D - T - 0.005);
-        addF(T, flH, D - 3.5 * T, -W / 2 + 2 * T, -flH / 2, D / 2);
-        addF(T, flH, D - 3.5 * T, W / 2 - 2 * T, -flH / 2, D / 2);
 
-        let extImg = null, intImg = null;
-        const sidemaps = {
-            top: { m: mats.top, w: W, h: D, cv: document.createElement('canvas') },
-            front: { m: mats.front, w: W, h: sh, cv: document.createElement('canvas') },
-            back: { m: mats.back, w: W, h: sh, cv: document.createElement('canvas') },
-            left: { m: mats.left, w: D, h: sh, cv: document.createElement('canvas') },
-            right: { m: mats.right, w: D, h: sh, cv: document.createElement('canvas') },
-            bottom: { m: mats.bottom, w: W, h: D, cv: document.createElement('canvas') }
-        };
+        function getDims() {
+            const t = TYPES[curType], s = t.sizes[curSize];
+            return { W: s.w * S, D: s.d * S, H: s.h * S, T: 0.02 };
+        }
 
+        function buildZaklapeci() {
+            const { W, D, H, T } = getDims();
+            const B = mats.base, sh = H - T, sy = T + sh / 2;
+            addWall(boxGroup, W, T, D, 0, T / 2, 0, B);
+            addWall(boxGroup, W, sh, T, 0, sy, D / 2 - T / 2, [B, B, B, B, mats.front, B]);
+            addWall(boxGroup, W, sh, T, 0, sy, -D / 2 + T / 2, [B, B, B, B, B, mats.back]);
+            addWall(boxGroup, T, sh, D - 2 * T, -W / 2 + T / 2, sy, 0, [B, mats.left, B, B, B, B]);
+            addWall(boxGroup, T, sh, D - 2 * T, W / 2 - T / 2, sy, 0, [mats.right, B, B, B, B, B]);
+
+            hingeGroup = new THREE.Group();
+            hingeGroup.position.set(0, H, -D / 2 + T / 2);
+            boxGroup.add(hingeGroup);
+            addWall(hingeGroup, W, T, D, 0, T / 2 + 0.001, D / 2 - T / 2, [B, B, mats.top, mats.lidInner, B, B]);
+
+            const flH = Math.min(sh * 0.55, 0.25);
+            addWall(hingeGroup, W - 4 * T, flH, T, 0, -flH / 2, D - T - 0.005, B);
+            addWall(hingeGroup, T, flH, D - 3.5 * T, -W / 2 + 2 * T, -flH / 2, D / 2, B);
+            addWall(hingeGroup, T, flH, D - 3.5 * T, W / 2 - 2 * T, -flH / 2, D / 2, B);
+        }
+
+        function buildDvoudilna() {
+            const { W, D, H, T } = getDims();
+            const B = mats.base;
+            const baseH = H * 0.6, lidWallH = H * 0.45, gap = T * 1.5;
+            const bsh = baseH - T, bsy = T + bsh / 2;
+
+
+            addWall(boxGroup, W, T, D, 0, T / 2, 0, B);
+            addWall(boxGroup, W, bsh, T, 0, bsy, D / 2 - T / 2, [B, B, B, B, mats.front, B]);
+            addWall(boxGroup, W, bsh, T, 0, bsy, -D / 2 + T / 2, [B, B, B, B, B, mats.back]);
+            addWall(boxGroup, T, bsh, D - 2 * T, -W / 2 + T / 2, bsy, 0, [B, mats.left, B, B, B, B]);
+            addWall(boxGroup, T, bsh, D - 2 * T, W / 2 - T / 2, bsy, 0, [mats.right, B, B, B, B, B]);
+
+
+            lidGroup = new THREE.Group();
+            lidGroup.position.set(0, baseH, 0);
+            boxGroup.add(lidGroup);
+
+            const LW = W + 2 * gap, LD = D + 2 * gap;
+            addWall(lidGroup, LW, T, LD, 0, lidWallH, 0, [B, B, mats.top, mats.lidInner, B, B]);
+            addWall(lidGroup, LW, lidWallH, T, 0, lidWallH / 2, LD / 2 - T / 2, B);
+            addWall(lidGroup, LW, lidWallH, T, 0, lidWallH / 2, -LD / 2 + T / 2, B);
+            addWall(lidGroup, T, lidWallH, LD - 2 * T, -LW / 2 + T / 2, lidWallH / 2, 0, B);
+            addWall(lidGroup, T, lidWallH, LD - 2 * T, LW / 2 - T / 2, lidWallH / 2, 0, B);
+        }
+
+        function buildLahev() {
+            const { W, D, H, T } = getDims();
+            const B = mats.base, sh = H - T, sy = T + sh / 2;
+            addWall(boxGroup, W, T, D, 0, T / 2, 0, B);
+            addWall(boxGroup, W, sh, T, 0, sy, D / 2 - T / 2, [B, B, B, B, mats.front, B]);
+            addWall(boxGroup, W, sh, T, 0, sy, -D / 2 + T / 2, [B, B, B, B, B, mats.back]);
+            addWall(boxGroup, T, sh, D - 2 * T, -W / 2 + T / 2, sy, 0, [B, mats.left, B, B, B, B]);
+            addWall(boxGroup, T, sh, D - 2 * T, W / 2 - T / 2, sy, 0, [mats.right, B, B, B, B, B]);
+
+            hingeGroup = new THREE.Group();
+            hingeGroup.position.set(0, H, -D / 2 + T / 2);
+            boxGroup.add(hingeGroup);
+            addWall(hingeGroup, W, T, D, 0, T / 2 + 0.001, D / 2 - T / 2, [B, B, mats.top, mats.lidInner, B, B]);
+
+
+            const lipH = Math.min(H * 0.12, 0.15);
+            addWall(hingeGroup, W - 2 * T, lipH, T, 0, -lipH / 2, D - T / 2 - 0.005, B);
+        }
+
+        function rebuildBox() {
+            clearBox();
+            if (curType === 'zaklapeci') buildZaklapeci();
+            else if (curType === 'dvoudilna') buildDvoudilna();
+            else buildLahev();
+            adjustCamera();
+            applySlider();
+            handleRedraw();
+        }
+
+        function adjustCamera() {
+            const { W, D, H } = getDims();
+            const mx = Math.max(W, D, H);
+            const dist = mx * 2.2 + 1.5;
+            camera.position.set(dist * .4, dist * .55, dist);
+            controls.target.set(0, H / 2, 0);
+            controls.update();
+        }
+
+        function applySlider() {
+            const v = +document.getElementById('open-slider').value;
+            if (curType === 'dvoudilna' && lidGroup) {
+                const { H } = getDims();
+                lidGroup.position.y = getDims().H * 0.6 + (v / 100) * H * 1.2;
+            } else if (hingeGroup) {
+                hingeGroup.rotation.x = -(v * Math.PI / 180);
+            }
+        }
+
+
+        function drawImgToCtx(ctx, img, cfg, w, h) {
+            if (cfg.mode === 'cover') {
+                const ir = img.width / img.height, cr = w / h; let sw, sh2;
+                if (ir > cr) { sh2 = h; sw = sh2 * ir; } else { sw = w; sh2 = sw / ir; }
+                ctx.drawImage(img, (w - sw) / 2, (h - sh2) / 2, sw, sh2);
+            } else {
+                const mw = w * (cfg.scale / 100), mh = h * (cfg.scale / 100), ir = img.width / img.height;
+                let dw, dh; if (ir > mw / mh) { dw = mw; dh = mw / ir; } else { dh = mh; dw = mh * ir; }
+                ctx.drawImage(img, w * (cfg.posX / 100) - dw / 2, h * (cfg.posY / 100) - dh / 2, dw, dh);
+            }
+        }
+        function makeEffectMap(img, cfg, w, h, eVal, dVal) {
+            const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+            const c = cv.getContext('2d'); const d = Math.round(dVal * 255);
+            c.fillStyle = `rgb(${d},${d},${d})`; c.fillRect(0, 0, w, h);
+            if (img && cfg.effect !== 'none') {
+                const t = document.createElement('canvas'); t.width = w; t.height = h;
+                const tc = t.getContext('2d'); drawImgToCtx(tc, img, cfg, w, h);
+                tc.globalCompositeOperation = 'source-atop';
+                const e = Math.round(eVal * 255); tc.fillStyle = `rgb(${e},${e},${e})`; tc.fillRect(0, 0, w, h);
+                c.drawImage(t, 0, 0);
+            }
+            return cv;
+        }
         function handleRedraw() {
             const boxColor = document.getElementById('box-color').value;
-            const active = {};
-            document.querySelectorAll('.side-card input').forEach(inp => {
-                active[inp.dataset.side] = inp.checked;
-                const card = inp.closest('.side-card');
-                const status = card.querySelector('.status-indicator');
-                if (inp.checked) { card.classList.add('active'); status.innerText = "Zobrazeno"; }
-                else { card.classList.remove('active'); status.innerText = "Skryto"; }
+            mats.base.color.set(boxColor).convertSRGBToLinear();
+            const { W, D, H, T } = getDims(), sh = H - T;
+            const dm = { top: { w: W, h: D }, front: { w: W, h: sh }, back: { w: W, h: sh }, left: { w: D, h: sh }, right: { w: D, h: sh } };
+            Object.keys(SIDE_NAMES).forEach(k => {
+                const cfg = sides[k], mat = mats[k], d = dm[k];
+                if (!cfg.image) {
+                    mat.map = null; mat.roughnessMap = null; mat.metalnessMap = null;
+                    mat.roughness = 0.9; mat.metalness = 0.0;
+                    mat.color.set(boxColor).convertSRGBToLinear(); mat.needsUpdate = true; return;
+                }
+                const cv = cfg.canvas; cv.width = 1024; cv.height = Math.round(1024 * (d.h / d.w));
+                const ctx = cv.getContext('2d'); ctx.fillStyle = boxColor; ctx.fillRect(0, 0, cv.width, cv.height);
+                drawImgToCtx(ctx, cfg.image, cfg, cv.width, cv.height);
+                if (!cfg.tex) { cfg.tex = new THREE.CanvasTexture(cv); cfg.tex.encoding = THREE.sRGBEncoding; }
+                else cfg.tex.needsUpdate = true;
+                mat.map = cfg.tex; mat.color.set(0xffffff);
+                if (cfg.effect !== 'none') {
+                    const eff = EFFECTS[cfg.effect];
+                    const rCv = makeEffectMap(cfg.image, cfg, cv.width, cv.height, eff.roughness, 0.9);
+                    const mCv = makeEffectMap(cfg.image, cfg, cv.width, cv.height, eff.metalness, 0.0);
+                    if (!cfg.roughTex) cfg.roughTex = new THREE.CanvasTexture(rCv);
+                    else { cfg.roughTex.image = rCv; cfg.roughTex.needsUpdate = true; }
+                    if (!cfg.metalTex) cfg.metalTex = new THREE.CanvasTexture(mCv);
+                    else { cfg.metalTex.image = mCv; cfg.metalTex.needsUpdate = true; }
+                    mat.roughnessMap = cfg.roughTex; mat.metalnessMap = cfg.metalTex;
+                    mat.roughness = 1.0; mat.metalness = 1.0;
+                } else {
+                    mat.roughnessMap = null; mat.metalnessMap = null;
+                    mat.roughness = 0.9; mat.metalness = 0.0;
+                }
+                mat.needsUpdate = true;
             });
 
-            mats.base.color.set(boxColor).convertSRGBToLinear();
-            Object.keys(sidemaps).forEach(k => {
-                const s = sidemaps[k];
-                const isInt = (k === 'bottom');
-                const img = isInt ? intImg : extImg;
-                const show = isInt ? !!intImg : (!!extImg && active[k]);
+            if (intImage) {
+                const { W, D } = getDims();
+                const cv = document.createElement('canvas'); cv.width = 1024; cv.height = Math.round(1024 * (D / W));
+                const ctx = cv.getContext('2d'); ctx.fillStyle = boxColor; ctx.fillRect(0, 0, cv.width, cv.height);
+                const ir = intImage.width / intImage.height;
+                const pad = 0.15, mw = cv.width * (1 - pad * 2), mh = cv.height * (1 - pad * 2);
+                let dw, dh; if (ir > mw / mh) { dw = mw; dh = mw / ir; } else { dh = mh; dw = mh * ir; }
+                ctx.drawImage(intImage, (cv.width - dw) / 2, (cv.height - dh) / 2, dw, dh);
+                if (!mats.lidInner._intTex) { mats.lidInner._intTex = new THREE.CanvasTexture(cv); mats.lidInner._intTex.encoding = THREE.sRGBEncoding; }
+                else { mats.lidInner._intTex.image = cv; mats.lidInner._intTex.needsUpdate = true; }
+                mats.lidInner.map = mats.lidInner._intTex; mats.lidInner.color.set(0xffffff); mats.lidInner.needsUpdate = true;
+            } else {
+                mats.lidInner.map = null; mats.lidInner.color.set(boxColor).convertSRGBToLinear(); mats.lidInner.needsUpdate = true;
+            }
+        }
 
-                if (!show) {
-                    s.m.map = null;
-                    s.m.color.set(boxColor).convertSRGBToLinear();
-                    s.m.needsUpdate = true;
-                    return;
-                }
 
-                const cv = s.cv; cv.width = 1024; cv.height = 1024 * (s.h / s.w);
-                const ctx = cv.getContext('2d');
-                ctx.fillStyle = boxColor; ctx.fillRect(0, 0, cv.width, cv.height);
-                const pad = 0.15;
-                const mw = cv.width * (1 - pad * 2), mh = cv.height * (1 - pad * 2);
-                const ir = img.width / img.height, cr = cv.width / cv.height;
-                let dw, dh;
-                if (ir > cr) { dw = mw; dh = mw / ir; } else { dh = mh; dw = mh * ir; }
-                ctx.drawImage(img, (cv.width - dw) / 2, (cv.height - dh) / 2, dw, dh);
+        function initSegmented(ctrlEl, buttons, onChange) {
+            const ind = ctrlEl.querySelector('.seg-indicator');
+            function updateInd() {
+                const active = ctrlEl.querySelector('.seg-btn.active');
+                if (!active || !ind) return;
+                ind.style.left = active.offsetLeft + 'px';
+                ind.style.width = active.offsetWidth + 'px';
+            }
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateInd();
+                    onChange(btn);
+                });
+            });
+            requestAnimationFrame(() => requestAnimationFrame(updateInd));
+            return updateInd;
+        }
 
-                if (!s.tex) { s.tex = new THREE.CanvasTexture(cv); s.tex.encoding = THREE.sRGBEncoding; }
-                else { s.tex.needsUpdate = true; }
 
-                s.m.map = s.tex;
-                s.m.color.set(0xffffff);
-                s.m.needsUpdate = true;
+        const typeBtns = document.querySelectorAll('#type-ctrl .seg-btn');
+        initSegmented(document.getElementById('type-ctrl'), [...typeBtns], btn => {
+            curType = btn.dataset.type;
+            curSize = 0;
+            buildSizeButtons();
+            updateSliderLabel();
+            updateInnerLidVisibility();
+            rebuildBox();
+        });
+
+
+        function buildSizeButtons() {
+            const ctrl = document.getElementById('size-ctrl');
+            const ind = document.getElementById('size-ind');
+            ctrl.innerHTML = '';
+            ctrl.appendChild(ind);
+            const szs = TYPES[curType].sizes;
+            const btns = szs.map((s, i) => {
+                const b = document.createElement('button');
+                b.className = 'seg-btn' + (i === curSize ? ' active' : '');
+                b.textContent = s.label;
+                b.dataset.index = i;
+                ctrl.appendChild(b);
+                return b;
+            });
+            initSegmented(ctrl, btns, btn => {
+                curSize = +btn.dataset.index;
+                rebuildBox();
             });
         }
 
-        document.getElementById('open-slider').oninput = (e) => { hinge.rotation.x = -(e.target.value * Math.PI / 180); };
-        document.getElementById('open-slider').dispatchEvent(new Event('input'));
-        document.getElementById('box-color').oninput = handleRedraw;
-        document.getElementById('bg-color').oninput = (e) => {
-            scene.background.set(e.target.value); container.style.backgroundColor = e.target.value;
-        };
+        function updateSliderLabel() {
+            const t = TYPES[curType];
+            document.getElementById('slider-label').textContent = t.sliderLabel;
+            document.getElementById('open-slider').max = t.sliderMax;
+            document.getElementById('open-slider').value = curType === 'dvoudilna' ? 0 : 40;
+        }
 
-        function setupUpload(id, sid, rid, cb) {
-            document.getElementById(id).onchange = (e) => {
+        function updateInnerLidVisibility() {
+            document.getElementById('inner-lid-section').style.display = '';
+        }
+
+
+        function buildSideChips() {
+            const wrap = document.getElementById('side-chips');
+            wrap.innerHTML = '';
+            Object.keys(SIDE_NAMES).forEach(k => {
+                const b = document.createElement('button');
+                b.className = 'side-chip' + (k === selectedSide ? ' active' : '') + (sides[k].image ? ' has-image' : '');
+                b.textContent = SIDE_NAMES[k];
+                b.dataset.side = k;
+                b.onclick = () => { selectedSide = k; buildSideChips(); renderSideEditor(); };
+                wrap.appendChild(b);
+            });
+        }
+
+        function renderSideEditor() {
+            const el = document.getElementById('side-editor');
+            const cfg = sides[selectedSide];
+            let html = '<div class="editor-upload"><label class="upload-btn"><span>' + (cfg.image ? 'Změnit obrázek' : '+ Nahrát obrázek') + '</span><input type="file" accept="image/*" id="side-file-input"></label></div>';
+
+            if (cfg.image) {
+                html += '<div class="editor-controls">';
+                html += '<div class="editor-preview"><img src="' + cfg.image.src + '" alt=""><span class="preview-name">' + cfg.fileName + '</span></div>';
+
+
+                html += '<div class="seg-ctrl" id="mode-ctrl"><div class="seg-indicator" id="mode-ind"></div>';
+                html += '<button class="seg-btn' + (cfg.mode === 'logo' ? ' active' : '') + '" data-mode="logo">Logo</button>';
+                html += '<button class="seg-btn' + (cfg.mode === 'cover' ? ' active' : '') + '" data-mode="cover">Celoplošný</button></div>';
+
+                if (cfg.mode === 'logo') {
+                    html += '<div class="slider-row"><div class="slider-header"><span>Velikost</span><span class="slider-val">' + cfg.scale + '%</span></div><input type="range" id="ed-scale" min="10" max="100" value="' + cfg.scale + '"></div>';
+                    html += '<div class="slider-row"><div class="slider-header"><span>Pozice X</span><span class="slider-val">' + cfg.posX + '%</span></div><input type="range" id="ed-posx" min="0" max="100" value="' + cfg.posX + '"></div>';
+                    html += '<div class="slider-row"><div class="slider-header"><span>Pozice Y</span><span class="slider-val">' + cfg.posY + '%</span></div><input type="range" id="ed-posy" min="0" max="100" value="' + cfg.posY + '"></div>';
+                }
+
+                html += '<div style="font-size:.68rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:1px;margin:4px 0 4px;text-align:center">Úprava povrchu</div>';
+                html += '<div class="effect-pills">';
+                [['none', 'Žádný'], ['matte', 'Matný'], ['glossy', 'Lesklý'], ['metallic', 'Metalický']].forEach(([e, l]) => {
+                    html += '<button class="effect-pill' + (cfg.effect === e ? ' active' : '') + '" data-effect="' + e + '">' + l + '</button>';
+                });
+                html += '</div>';
+
+                html += '<button class="btn-sm-danger" id="ed-remove">Smazat obrázek</button>';
+                html += '</div>';
+            }
+            el.innerHTML = html;
+
+
+            const fileIn = document.getElementById('side-file-input');
+            if (fileIn) fileIn.onchange = e => {
                 const f = e.target.files[0]; if (!f) return;
                 const reader = new FileReader();
-                reader.onload = (ev) => {
+                reader.onload = ev => {
                     const img = new Image();
-                    img.onload = () => { cb(img); document.getElementById(sid).innerText = "Nahráno: " + f.name; document.getElementById(rid).style.display = 'block'; handleRedraw(); };
+                    img.onload = () => {
+                        cfg.image = img;
+                        cfg.fileName = f.name;
+                        buildSideChips();
+                        renderSideEditor();
+                        handleRedraw();
+                    };
                     img.src = ev.target.result;
                 };
                 reader.readAsDataURL(f);
             };
-        }
-        setupUpload('ext-file', 'ext-status', 'rm-ext', (i) => extImg = i);
-        setupUpload('int-file', 'int-status', 'rm-int', (i) => intImg = i);
-        document.querySelectorAll('.side-card input').forEach(c => c.onchange = handleRedraw);
-        document.getElementById('rm-ext').onclick = () => { extImg = null; document.getElementById('ext-status').innerText = "+ Vybrat grafiku loga"; document.getElementById('rm-ext').style.display = 'none'; document.getElementById('ext-file').value = ""; handleRedraw(); };
-        document.getElementById('rm-int').onclick = () => { intImg = null; document.getElementById('int-status').innerText = "+ Nahrát vnitřní potisk"; document.getElementById('rm-int').style.display = 'none'; document.getElementById('int-file').value = ""; handleRedraw(); };
 
-        function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+
+            const modeCtrl = document.getElementById('mode-ctrl');
+            if (modeCtrl) {
+                initSegmented(modeCtrl, [...modeCtrl.querySelectorAll('.seg-btn')], btn => {
+                    cfg.mode = btn.dataset.mode;
+                    renderSideEditor();
+                    handleRedraw();
+                });
+            }
+
+
+            const scaleEl = document.getElementById('ed-scale');
+            if (scaleEl) scaleEl.oninput = e => { cfg.scale = +e.target.value; e.target.previousElementSibling.querySelector('.slider-val').textContent = cfg.scale + '%'; handleRedraw(); };
+            const posxEl = document.getElementById('ed-posx');
+            if (posxEl) posxEl.oninput = e => { cfg.posX = +e.target.value; e.target.previousElementSibling.querySelector('.slider-val').textContent = cfg.posX + '%'; handleRedraw(); };
+            const posyEl = document.getElementById('ed-posy');
+            if (posyEl) posyEl.oninput = e => { cfg.posY = +e.target.value; e.target.previousElementSibling.querySelector('.slider-val').textContent = cfg.posY + '%'; handleRedraw(); };
+
+
+            el.querySelectorAll('.effect-pill').forEach(p => {
+                p.onclick = () => {
+                    cfg.effect = p.dataset.effect;
+                    el.querySelectorAll('.effect-pill').forEach(x => x.classList.remove('active'));
+                    p.classList.add('active');
+                    handleRedraw();
+                };
+            });
+
+
+            const rmBtn = document.getElementById('ed-remove');
+            if (rmBtn) rmBtn.onclick = () => {
+                cfg.image = null; cfg.fileName = ''; cfg.tex = null;
+                buildSideChips(); renderSideEditor(); handleRedraw();
+            };
+        }
+
+
+        document.getElementById('open-slider').oninput = applySlider;
+        document.getElementById('box-color').oninput = handleRedraw;
+        document.getElementById('bg-color').oninput = e => {
+            scene.background.set(e.target.value);
+            document.getElementById('preview-section').style.background = e.target.value;
+        };
+
+
+        document.getElementById('int-file').onchange = e => {
+            const f = e.target.files[0]; if (!f) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    intImage = img;
+                    document.getElementById('int-status').textContent = 'Nahráno: ' + f.name;
+                    document.getElementById('rm-int').style.display = '';
+                    handleRedraw();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(f);
+        };
+        document.getElementById('rm-int').onclick = () => {
+            intImage = null;
+            document.getElementById('int-status').textContent = '+ Nahrát vnitřní potisk';
+            document.getElementById('rm-int').style.display = 'none';
+            document.getElementById('int-file').value = '';
+            handleRedraw();
+        };
+
+
+        buildSizeButtons();
+        updateSliderLabel();
+        updateInnerLidVisibility();
+        buildSideChips();
+        renderSideEditor();
+        rebuildBox();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
         animate();
-        handleRedraw();
 
         window.onresize = () => {
             camera.aspect = container.clientWidth / container.clientHeight;
