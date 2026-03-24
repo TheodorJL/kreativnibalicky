@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Konfigurátor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-blue: #a2b7de;
+            --accent-pink: #f84b80;
+            --text-dark: #2d3436;
+            --card-white: #ffffff;
+            --radius: 40px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-blue);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+        }
+
+        #main-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90vw;
+            max-width: 1300px;
+            height: 85vh;
+            background: var(--card-white);
+            border-radius: var(--radius);
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            display: flex;
+            overflow: hidden;
+        }
+
+        #preview-section {
+            flex: 1.2;
+            position: relative;
+            background: #a2b7de;
+            border-right: 1px solid #f0f2f5;
+        }
+
+        #preview-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-section {
+            flex: 0.8;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            scrollbar-width: none;
+        }
+
+        #ui-section::-webkit-scrollbar {
+            display: none;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0 0 30px 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .section-label {
+            text-align: center;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin: 30px 0 15px 0;
+            position: relative;
+            color: #555;
+        }
+
+        .section-label::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 3px;
+            background: var(--accent-pink);
+            margin: 8px auto 0;
+            border-radius: 2px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #f0f0f5;
+            outline: none;
+            margin: 15px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-pink);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(248, 75, 128, 0.3);
+        }
+
+        .color-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .color-box-wrap {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid #eee;
+            padding: 3px;
+            cursor: pointer;
+        }
+
+        input[type="color"] {
+            border: none;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+
+        .upload-btn {
+            display: block;
+            border: 2px dashed #ddd;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #777;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .upload-btn:hover {
+            border-color: var(--accent-pink);
+            color: var(--accent-pink);
+            background: rgba(248, 75, 128, 0.02);
+        }
+
+        .sides-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .side-card {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 2px solid #f8f9fb;
+            border-radius: 16px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.01);
+            position: relative;
+        }
+
+        .side-card[data-side="top"] {
+            grid-column: span 2;
+        }
+
+        .side-card:hover {
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04);
+            transform: translateY(-1px);
+            border-color: #f0f2f5;
+        }
+
+        .side-card.active {
+            border-color: var(--accent-pink);
+            background: #fff;
+            box-shadow: 0 8px 18px rgba(248, 75, 128, 0.08);
+        }
+
+        .side-card .label-box {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .side-card .side-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #333;
+            display: block;
+            margin-bottom: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .side-card .status-indicator {
+            font-size: 0.65rem;
+            color: #aaa;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .side-card.active .side-name {
+            color: var(--accent-pink);
+        }
+
+        .side-card.active .status-indicator {
+            color: var(--accent-pink);
+            opacity: 0.7;
+        }
+
+        .side-card input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+
+        .toggle-switch {
+            width: 32px;
+            height: 18px;
+            background: #e4e6eb;
+            border-radius: 20px;
+            position: relative;
+            transition: 0.3s;
+            flex-shrink: 0;
+        }
+
+        .side-card.active .toggle-switch {
+            background: var(--accent-pink);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .side-card.active .toggle-switch::after {
+            left: 17px;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent-pink);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(248, 75, 128, 0.2);
+            margin-top: auto;
+            transition: transform 0.1s;
+        }
+
+        .btn-action:active {
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 0.75rem;
+            text-decoration: underline;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .btn-danger:hover {
+            color: #888;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            #main-wrapper {
+                flex-direction: column;
+                height: 95vh;
+            }
+
+            #ui-section {
+                padding: 30px;
+                flex: 1;
+            }
+
+            #preview-section {
+                flex: 0.7;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main-wrapper">
+        <div id="preview-section">
+            <div id="preview-canvas"></div>
+        </div>
+        <div id="ui-section">
+            <h1>Konfigurátor</h1>
+            <div class="section-label">Otevírání</div>
+            <div class="control-group"><input type="range" id="open-slider" min="0" max="150" value="40"></div>
+            <div class="section-label">Barva / Pozadí</div>
+            <div class="color-selector">
+                <div class="color-box-wrap" title="Barva krabice"><input type="color" id="box-color" value="#ffffff">
+                </div>
+                <div class="color-box-wrap" title="Barva pozadí scény"><input type="color" id="bg-color"
+                        value="#a2b7de"></div>
+            </div>
+            <div class="section-label">Vnější Potisk</div>
+            <div class="control-group">
+                <label class="upload-btn" for="ext-file"><span id="ext-status">+ Vybrat grafiku loga</span></label>
+                <input type="file" id="ext-file" accept="image/*">
+                <div class="sides-list">
+                    <label class="side-card active" data-side="top">
+                        <input type="checkbox" data-side="top" checked>
+                        <div class="label-box"><span class="side-name">Vrchní strana</span><span
+                                class="status-indicator">Zobrazeno</span></div>
+                        <div class="toggle-switch"></div>
+                    </label>
+                    <label class="side-card active" data-side="front">
+                        <input type="checkbox" data-side="front" checked>
+                        <div class="label-box"><span class="side-name">Přední strana</span><span
+                                class="status-indicator">Zobrazeno</span></div>
+                        <div class="toggle-switch"></div>
+                    </label>
+                    <label class="side-card active" data-side="back">
+                        <input type="checkbox" data-side="back" checked>
+                        <div class="label-box"><span class="side-name">Zadní strana</span><span
+                                class="status-indicator">Zobrazeno</span></div>
+                        <div class="toggle-switch"></div>
+                    </label>
+                    <label class="side-card active" data-side="left">
+                        <input type="checkbox" data-side="left" checked>
+                        <div class="label-box"><span class="side-name">Levý bok</span><span
+                                class="status-indicator">Zobrazeno</span></div>
+                        <div class="toggle-switch"></div>
+                    </label>
+                    <label class="side-card active" data-side="right">
+                        <input type="checkbox" data-side="right" checked>
+                        <div class="label-box"><span class="side-name">Pravý bok</span><span
+                                class="status-indicator">Zobrazeno</span></div>
+                        <div class="toggle-switch"></div>
+                    </label>
+                </div>
+                <button class="btn-danger" id="rm-ext" style="display:none">Smazat grafiku</button>
+            </div>
+            <div class="section-label">Vnitřek Víka</div>
+            <div class="control-group">
+                <label class="upload-btn" for="int-file"><span id="int-status">+ Nahrát vnitřní potisk</span></label>
+                <input type="file" id="int-file" accept="image/*">
+                <button class="btn-danger" id="rm-int" style="display:none">Odebrat vnitřní potisk</button>
+            </div>
+            <button class="btn-action" onclick="alert('Krabička uložena do košíku!')">Spočítat</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        const container = document.getElementById('preview-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xa2b7de);
+
+        const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
+        camera.position.set(2, 2.5, 5);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.shadowMap.enabled = true;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+        dirLight.position.set(5, 10, 8);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: 0.05 }));
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        const W = 2, D = 1.5, H = 0.5, T = 0.025;
+        const sh = H - T, sy = T + sh / 2;
+        const boxModel = new THREE.Group();
+        scene.add(boxModel);
+
+        const mats = {
+            base: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+            top: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+            bottom: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+            front: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+            back: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+            left: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+            right: new THREE.MeshStandardMaterial({ roughness: 0.9 })
+        };
+
+        function makeWall(w, h, d, x, y, z, matArray) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), matArray);
+            mesh.position.set(x, y, z);
+            mesh.castShadow = mesh.receiveShadow = true;
+            boxModel.add(mesh);
+            return mesh;
+        }
+
+        const B = mats.base;
+        makeWall(W, T, D, 0, T / 2, 0, B);
+        makeWall(W, sh, T, 0, sy, D / 2 - T / 2, [B, B, B, B, mats.front, B]);
+        makeWall(W, sh, T, 0, sy, -D / 2 + T / 2, [B, B, B, B, B, mats.back]);
+        makeWall(T, sh, D - 2 * T, -W / 2 + T / 2, sy, 0, [B, mats.left, B, B, B, B]);
+        makeWall(T, sh, D - 2 * T, W / 2 - T / 2, sy, 0, [mats.right, B, B, B, B, B]);
+
+        const hinge = new THREE.Group();
+        hinge.position.set(0, H, -D / 2 + T / 2);
+        boxModel.add(hinge);
+
+        const lid = new THREE.Mesh(new THREE.BoxGeometry(W, T, D), [B, B, mats.top, mats.bottom, B, B]);
+        lid.position.set(0, T / 2 + 0.001, D / 2 - T / 2);
+        lid.castShadow = true; hinge.add(lid);
+
+        const flH = 0.25;
+        function addF(w, h, d, x, y, z) {
+            const p = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), B);
+            p.position.set(x, y, z); p.castShadow = true; hinge.add(p);
+        }
+        addF(W - 4 * T, flH, T, 0, -flH / 2, D - T - 0.005);
+        addF(T, flH, D - 3.5 * T, -W / 2 + 2 * T, -flH / 2, D / 2);
+        addF(T, flH, D - 3.5 * T, W / 2 - 2 * T, -flH / 2, D / 2);
+
+        let extImg = null, intImg = null;
+        const sidemaps = {
+            top: { m: mats.top, w: W, h: D, cv: document.createElement('canvas') },
+            front: { m: mats.front, w: W, h: sh, cv: document.createElement('canvas') },
+            back: { m: mats.back, w: W, h: sh, cv: document.createElement('canvas') },
+            left: { m: mats.left, w: D, h: sh, cv: document.createElement('canvas') },
+            right: { m: mats.right, w: D, h: sh, cv: document.createElement('canvas') },
+            bottom: { m: mats.bottom, w: W, h: D, cv: document.createElement('canvas') }
+        };
+
+        function handleRedraw() {
+            const boxColor = document.getElementById('box-color').value;
+            const checks = document.querySelectorAll('.side-card input');
+            const active = {};
+            checks.forEach(c => {
+                active[c.dataset.side] = c.checked;
+                const card = c.closest('.side-card');
+                const status = card.querySelector('.status-indicator');
+                if (c.checked) { card.classList.add('active'); status.innerText = "Zobrazeno"; }
+                else { card.classList.remove('active'); status.innerText = "Skryto"; }
+            });
+
+            mats.base.color.set(boxColor).convertSRGBToLinear();
+            Object.keys(sidemaps).forEach(k => {
+                const s = sidemaps[k];
+                const isInt = (k === 'bottom');
+                const img = isInt ? intImg : extImg;
+                const show = isInt ? !!intImg : (!!extImg && active[k]);
+                if (!show) { s.m.map = null; s.m.color.set(boxColor).convertSRGBToLinear(); return; }
+                const cv = s.cv; cv.width = 1024; cv.height = 1024 * (s.h / s.w);
+                const ctx = cv.getContext('2d');
+                ctx.fillStyle = boxColor; ctx.fillRect(0, 0, cv.width, cv.height);
+                const pad = 0.15;
+                const mw = cv.width * (1 - pad * 2), mh = cv.height * (1 - pad * 2);
+                const ir = img.width / img.height, cr = cv.width / cv.height;
+                let dw, dh;
+                if (ir > cr) { dw = mw; dh = mw / ir; } else { dh = mh; dw = mh * ir; }
+                ctx.drawImage(img, (cv.width - dw) / 2, (cv.height - dh) / 2, dw, dh);
+                if (!s.tex) { s.tex = new THREE.CanvasTexture(cv); s.tex.encoding = THREE.sRGBEncoding; }
+                s.m.map = s.tex; s.m.color.set(0xffffff); s.tex.needsUpdate = true;
+            });
+        }
+
+        document.getElementById('open-slider').oninput = (e) => { hinge.rotation.x = -(e.target.value * Math.PI / 180); };
+        document.getElementById('open-slider').dispatchEvent(new Event('input'));
+        document.getElementById('box-color').oninput = handleRedraw;
+        document.getElementById('bg-color').oninput = (e) => {
+            const c = new THREE.Color(e.target.value);
+            scene.background.set(c); container.style.backgroundColor = e.target.value;
+        };
+
+        function setupUpload(id, sid, rid, cb) {
+            document.getElementById(id).onchange = (e) => {
+                const f = e.target.files[0]; if (!f) return;
+                const r = new FileReader();
+                r.onload = (ev) => {
+                    const i = new Image();
+                    i.onload = () => { cb(i); document.getElementById(sid).innerText = "Nahráno: " + f.name; document.getElementById(rid).style.display = 'block'; handleRedraw(); };
+                    i.src = ev.target.result;
+                };
+                r.readAsDataURL(f);
+            };
+        }
+        setupUpload('ext-file', 'ext-status', 'rm-ext', (i) => extImg = i);
+        setupUpload('int-file', 'int-status', 'rm-int', (i) => intImg = i);
+        document.querySelectorAll('.side-card input').forEach(c => c.onchange = handleRedraw);
+        document.getElementById('rm-ext').onclick = () => { extImg = null; document.getElementById('ext-status').innerText = "+ Vybrat grafiku loga"; document.getElementById('rm-ext').style.display = 'none'; document.getElementById('ext-file').value = ""; handleRedraw(); };
+        document.getElementById('rm-int').onclick = () => { intImg = null; document.getElementById('int-status').innerText = "+ Nahrát vnitřní potisk"; document.getElementById('rm-int').style.display = 'none'; document.getElementById('int-file').value = ""; handleRedraw(); };
+
+        function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+        animate();
+        handleRedraw();
+
+        window.onresize = () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        };
+    </script>
+</body>
+
+</html>
