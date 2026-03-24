@@ -727,23 +727,23 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-        const dirL = new THREE.DirectionalLight(0xffffff, 0.7);
-        dirL.position.set(5, 10, 8);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+        const dirL = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirL.position.set(5, 12, 8);
         dirL.castShadow = true;
-        dirL.shadow.mapSize.set(1024, 1024);
+        dirL.shadow.mapSize.set(2048, 2048);
         dirL.shadow.camera.near = 0.5;
         dirL.shadow.camera.far = 50;
-        dirL.shadow.camera.left = -10;
-        dirL.shadow.camera.right = 10;
-        dirL.shadow.camera.top = 10;
-        dirL.shadow.camera.bottom = -10;
-        dirL.shadow.bias = -0.001;
+        dirL.shadow.camera.left = -15;
+        dirL.shadow.camera.right = 15;
+        dirL.shadow.camera.top = 15;
+        dirL.shadow.camera.bottom = -15;
+        dirL.shadow.bias = -0.0005;
         scene.add(dirL);
-        const fillL = new THREE.DirectionalLight(0xeef2ff, 0.3);
-        fillL.position.set(-4, 6, -4); scene.add(fillL);
-        const rimL = new THREE.PointLight(0xfff0e6, 0.35);
-        rimL.position.set(0, 3, 6); scene.add(rimL);
+        const fillL = new THREE.DirectionalLight(0xeef2ff, 0.4);
+        fillL.position.set(-6, 4, -6); scene.add(fillL);
+        const rimL = new THREE.PointLight(0xfff0e6, 0.2);
+        rimL.position.set(0, 4, 6); scene.add(rimL);
 
 
         const pmrem = new THREE.PMREMGenerator(renderer);
@@ -757,11 +757,11 @@
         pmrem.dispose();
 
 
-        const mats = { base: new THREE.MeshStandardMaterial({ roughness: 0.9 }) };
+        const mats = { base: new THREE.MeshStandardMaterial({ roughness: 0.9, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }) };
         Object.keys(SIDE_NAMES).forEach(k => {
-            mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.9 });
+            mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.9, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
         });
-        mats.lidInner = new THREE.MeshStandardMaterial({ roughness: 0.9 });
+        mats.lidInner = new THREE.MeshStandardMaterial({ roughness: 0.9, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
 
 
         const boxGroup = new THREE.Group();
@@ -781,10 +781,20 @@
         }
 
         function addWall(parent, w, h, d, x, y, z, matArr) {
-            const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), matArr);
+            const geom = new THREE.BoxGeometry(w, h, d);
+            const m = new THREE.Mesh(geom, matArr);
             m.position.set(x, y, z);
             m.castShadow = true;
             m.receiveShadow = true;
+
+
+            const edges = new THREE.EdgesGeometry(geom);
+            const line = new THREE.LineSegments(
+                edges,
+                new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.12 })
+            );
+            m.add(line);
+
             parent.add(m); return m;
         }
 
