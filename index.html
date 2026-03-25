@@ -507,6 +507,32 @@
             background: var(--accent-light)
         }
 
+        /* Deluxe card — premium shimmer */
+        .option-card[data-print="deluxe"] {
+            background: linear-gradient(135deg, #fff9f0 0%, #fff 40%, #fff8f0 100%);
+            border-color: #d4a000;
+            position: relative;
+            overflow: hidden
+        }
+        .option-card[data-print="deluxe"]::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, transparent 40%, rgba(255,210,80,.18) 50%, transparent 60%);
+            background-size: 200% 100%;
+            animation: deluxeShine 7s ease-in-out infinite;
+            pointer-events: none
+        }
+        .option-card[data-print="deluxe"].active {
+            border-color: #d4a000;
+            background: linear-gradient(135deg, #fff5e0 0%, #fff8ee 100%);
+            color: #a07000
+        }
+        @keyframes deluxeShine {
+            0%   { background-position: 200% 0 }
+            100% { background-position: -200% 0 }
+        }
+
         .option-dot {
             width: 16px;
             height: 16px;
@@ -1120,10 +1146,11 @@
             <input type="range" id="open-slider" min="0" max="150" value="40">
 
             <div class="section-label">Barva / Pozadí</div>
-            <div class="color-row">
+            <div class="color-row" id="color-row-wrap">
                 <div class="color-wrap" title="Barva krabice"><input type="color" id="box-color" value="#f84b80"></div>
                 <div class="color-wrap" title="Barva pozadí"><input type="color" id="bg-color" value="#a2b7de"></div>
             </div>
+            <div id="basic-color-lock" style="display:none;font-size:.78rem;color:#888;margin-top:4px;text-align:center;">Barva krabice je u Basic varianty pevně daná</div>
 
             <div class="section-label">Editor Stran</div>
             <div id="sides-section">
@@ -1480,16 +1507,27 @@
             }
             return cv;
         }
+     
+        const PRINT_MAT = {
+            basic:    { roughness: 0.92, metalness: 0.0,  envMapIntensity: 0.5 },
+            standard: { roughness: 0.72, metalness: 0.05, envMapIntensity: 0.9 },
+            deluxe:   { roughness: 0.28, metalness: 0.22, envMapIntensity: 1.1 }
+        };
+
         function handleRedraw() {
             const boxColor = document.getElementById('box-color').value;
+            const pm = PRINT_MAT[selectedPrint] || PRINT_MAT.standard;
             mats.base.color.set(boxColor).convertSRGBToLinear();
+            mats.base.roughness = pm.roughness; mats.base.metalness = pm.metalness;
+            mats.base.envMapIntensity = pm.envMapIntensity; mats.base.needsUpdate = true;
             const { W, D, H, T } = getDims(), sh = H - T;
             const dm = { top: { w: W, h: D }, front: { w: W, h: sh }, back: { w: W, h: sh }, left: { w: D, h: sh }, right: { w: D, h: sh } };
             Object.keys(SIDE_NAMES).forEach(k => {
                 const cfg = sides[k], mat = mats[k], d = dm[k];
                 if (!cfg.image) {
                     mat.map = null; mat.roughnessMap = null; mat.metalnessMap = null;
-                    mat.roughness = 0.9; mat.metalness = 0.0;
+                    mat.roughness = pm.roughness; mat.metalness = pm.metalness;
+                    mat.envMapIntensity = pm.envMapIntensity;
                     mat.color.set(boxColor).convertSRGBToLinear(); mat.needsUpdate = true; return;
                 }
                 const cv = cfg.canvas; cv.width = 1024; cv.height = Math.round(1024 * (d.h / d.w));
@@ -1510,8 +1548,9 @@
                     mat.roughness = 1.0; mat.metalness = 1.0;
                 } else {
                     mat.roughnessMap = null; mat.metalnessMap = null;
-                    mat.roughness = 0.9; mat.metalness = 0.0;
+                    mat.roughness = pm.roughness; mat.metalness = pm.metalness;
                 }
+                mat.envMapIntensity = pm.envMapIntensity;
                 mat.needsUpdate = true;
             });
 
@@ -1525,10 +1564,12 @@
                 ctx.drawImage(intImage, (cv.width - dw) / 2, (cv.height - dh) / 2, dw, dh);
                 if (!mats.lidInner._intTex) { mats.lidInner._intTex = new THREE.CanvasTexture(cv); mats.lidInner._intTex.encoding = THREE.sRGBEncoding; }
                 else { mats.lidInner._intTex.image = cv; mats.lidInner._intTex.needsUpdate = true; }
-                mats.lidInner.map = mats.lidInner._intTex; mats.lidInner.color.set(0xffffff); mats.lidInner.needsUpdate = true;
+                mats.lidInner.map = mats.lidInner._intTex; mats.lidInner.color.set(0xffffff);
             } else {
-                mats.lidInner.map = null; mats.lidInner.color.set(boxColor).convertSRGBToLinear(); mats.lidInner.needsUpdate = true;
+                mats.lidInner.map = null; mats.lidInner.color.set(boxColor).convertSRGBToLinear();
             }
+            mats.lidInner.roughness = pm.roughness; mats.lidInner.metalness = pm.metalness;
+            mats.lidInner.envMapIntensity = pm.envMapIntensity; mats.lidInner.needsUpdate = true;
         }
 
 
@@ -1731,19 +1772,57 @@
 
 
        
-        const PRICE_CFG = {
-            typeBase:   { zaklapeci: 45, dvoudilna: 65, lahev: 55 },  
-            sizeMult:   [1.0, 1.45, 1.9],                             
-            fillExtra:  { fixace: 18, 'bez-fixace': 0 },              
-            printExtra: { basic: 0, standard: 28, deluxe: 65 },       
-            qtyDisc(n) {                                            
-                if (n >= 151) return { pct: 20, label: '–20 %' };
-                if (n >= 51)  return { pct: 12, label: '–12 %' };
-                if (n >= 21)  return { pct:  7, label: '–7 %'  };
-                if (n >= 11)  return { pct:  3, label: '–3 %'  };
-                return { pct: 0, label: null };
+       
+        const PRICE_TABLE = {
+            zaklapeci: {
+                basic: {
+                    fixace:      { 0:{1:225,51:210,151:190}, 1:{1:275,51:255,151:240}, 2:{1:295,51:280,151:265} },
+                    'bez-fixace':{ 0:{1:205,51:190,151:170}, 1:{1:260,51:235,151:220}, 2:{1:275,51:255,151:265} }
+                },
+                standard: {
+                    fixace:      { 0:{1:250,51:235,151:215}, 1:{1:300,51:280,151:265}, 2:{1:320,51:305,151:290} },
+                    'bez-fixace':{ 0:{1:230,51:215,151:195}, 1:{1:285,51:260,151:245}, 2:{1:300,51:280,151:265} }
+                },
+                deluxe: {
+                    fixace:      { 0:{1:750,51:690,151:640}, 1:{1:850,51:790,151:710}, 2:{1:890,51:830,151:790} },
+                    'bez-fixace':{ 0:{1:650,51:590,151:540}, 1:{1:750,51:690,151:610}, 2:{1:790,51:730,151:690} }
+                }
+            },
+            dvoudilna: {
+                basic: {
+                    fixace:      { 0:{1:215,51:200,151:180}, 1:{1:265,51:245,151:230}, 2:{1:285,51:270,151:255} },
+                    'bez-fixace':{ 0:{1:195,51:180,151:160}, 1:{1:250,51:225,151:210}, 2:{1:265,51:245,151:255} }
+                },
+                standard: {
+                    fixace:      { 0:{1:240,51:225,151:205}, 1:{1:290,51:270,151:255}, 2:{1:310,51:295,151:280} },
+                    'bez-fixace':{ 0:{1:220,51:205,151:185}, 1:{1:275,51:250,151:235}, 2:{1:290,51:270,151:255} }
+                },
+                deluxe: {
+                    fixace:      { 0:{1:730,51:590,151:620}, 1:{1:830,51:770,151:690}, 2:{1:870,51:810,151:770} },
+                    'bez-fixace':{ 0:{1:630,51:570,151:520}, 1:{1:730,51:670,151:590}, 2:{1:770,51:710,151:670} }
+                }
+            },
+            lahev: {
+                
+                basic: {
+                    fixace:      { 0:{1:290,51:280,151:270}, 1:{1:310,51:300,151:290} }
+                },
+                standard: {
+                    fixace:      { 0:{1:350,51:340,151:330}, 1:{1:370,51:360,151:350} }
+                },
+                deluxe: {
+                    fixace:      { 0:{1:410,51:390,151:375}, 1:{1:425,51:405,151:390} }
+                }
             }
         };
+
+        function getTier(n) {
+            if (n >= 151) return { key: 151, label: 'Cena pro 151+ ks' };
+            if (n >= 51)  return { key:  51, label: 'Cena pro 51–150 ks' };
+            return { key: 1, label: null };
+        }
+
+        const BASIC_COLOR = '#ffffff';
 
         buildSizeButtons();
         updateSliderLabel();
@@ -1751,6 +1830,7 @@
         buildSideChips();
         renderSideEditor();
         rebuildBox();
+        applyPrintAppearance();
 
         
         function updateQuantityVisual() {
@@ -1814,14 +1894,13 @@
         function calcPrice() {
             const rawQty = +document.getElementById('qty-slider').value;
             const n = rawQty >= 151 ? 151 : rawQty;
-            const base = PRICE_CFG.typeBase[curType] * PRICE_CFG.sizeMult[curSize];
-            const extras = PRICE_CFG.fillExtra[selectedFill] + PRICE_CFG.printExtra[selectedPrint];
-            const disc = PRICE_CFG.qtyDisc(n);
-            const unitRaw = base + extras;
-            const unit = unitRaw * (1 - disc.pct / 100);
+            const tier = getTier(n);
+            const fill = curType === 'lahev' ? 'fixace' : selectedFill;
+            const typeTable = PRICE_TABLE[curType];
+            const unit = typeTable[selectedPrint][fill][curSize][tier.key];
             const total = unit * n;
             const totalVat = total * 1.21;
-            return { unit, total, totalVat, n, disc };
+            return { unit, total, totalVat, n, disc: tier };
         }
 
         function fmt(x) { return Math.round(x).toLocaleString('cs-CZ') + ' Kč'; }
@@ -1846,12 +1925,31 @@
             };
         });
 
+        function applyPrintAppearance() {
+            const isBasic = selectedPrint === 'basic';
+            const colorWrap = document.getElementById('color-row-wrap');
+            const lockNote  = document.getElementById('basic-color-lock');
+            const boxColorEl = document.getElementById('box-color');
+            if (isBasic) {
+                boxColorEl.value = BASIC_COLOR;
+                colorWrap.style.opacity = '0.35';
+                colorWrap.style.pointerEvents = 'none';
+                lockNote.style.display = '';
+            } else {
+                colorWrap.style.opacity = '';
+                colorWrap.style.pointerEvents = '';
+                lockNote.style.display = 'none';
+            }
+            handleRedraw();
+        }
+
         document.querySelectorAll('.print-cards .option-card').forEach(c => {
             c.onclick = () => {
                 document.querySelectorAll('.print-cards .option-card').forEach(x => x.classList.remove('active'));
                 c.classList.add('active');
                 selectedPrint = c.dataset.print;
                 updatePrice();
+                applyPrintAppearance();
             };
         });
 
@@ -1866,6 +1964,11 @@
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
+            if (selectedPrint === 'deluxe') {
+                const t = performance.now() / 1000;
+                const shimmer = 1.1 + Math.sin(t * 0.7) * 0.45 + Math.sin(t * 1.9 + 1.2) * 0.18;
+                Object.values(mats).forEach(m => { m.envMapIntensity = shimmer; m.needsUpdate = true; });
+            }
             renderer.render(scene, camera);
         }
         animate();
