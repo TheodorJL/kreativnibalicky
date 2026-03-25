@@ -1483,8 +1483,6 @@
         function handleRedraw() {
             const boxColor = document.getElementById('box-color').value;
             mats.base.color.set(boxColor).convertSRGBToLinear();
-            instanceMat.color.set(boxColor).convertSRGBToLinear();
-            instanceMat.needsUpdate = true;
             const { W, D, H, T } = getDims(), sh = H - T;
             const dm = { top: { w: W, h: D }, front: { w: W, h: sh }, back: { w: W, h: sh }, left: { w: D, h: sh }, right: { w: D, h: sh } };
             Object.keys(SIDE_NAMES).forEach(k => {
@@ -1787,7 +1785,9 @@
             }
 
             const geom = new THREE.BoxGeometry(W, H, D);
-            const imesh = new THREE.InstancedMesh(geom, instanceMat, instCount);
+           
+            const matArray = [mats.right, mats.left, mats.top, mats.base, mats.front, mats.back];
+            const imesh = new THREE.InstancedMesh(geom, matArray, instCount);
             imesh.castShadow = true;
 
             const dummy = new THREE.Object3D();
