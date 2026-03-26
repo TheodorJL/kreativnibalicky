@@ -68,6 +68,38 @@
             height: 100%
         }
 
+        #canvas-hint {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 18px;
+            background: rgba(255,255,255,.72);
+            backdrop-filter: blur(6px);
+            padding: 7px 18px;
+            border-radius: 20px;
+            font-size: .75rem;
+            color: #777;
+            pointer-events: none;
+            transition: opacity .6s;
+            z-index: 5
+        }
+
+        #canvas-hint span {
+            white-space: nowrap
+        }
+
+        #canvas-hint span + span::before {
+            content: '·';
+            margin-right: 18px;
+            color: #bbb
+        }
+
+        #canvas-hint.hidden {
+            opacity: 0
+        }
+
         #ui-section {
             flex: 0.7;
             padding: 18px 22px 24px;
@@ -507,7 +539,7 @@
             background: var(--accent-light)
         }
 
-        /* Deluxe card — premium shimmer */
+        
         .option-card[data-print="deluxe"] {
             background: linear-gradient(135deg, #fff9f0 0%, #fff 40%, #fff8f0 100%);
             border-color: #d4a000;
@@ -1096,6 +1128,11 @@
     <div id="main-wrapper">
         <div id="preview-section">
             <div id="preview-canvas"></div>
+            <div id="canvas-hint">
+                <span>Levé tlačítko — otáčení</span>
+                <span>Pravé tlačítko — posun</span>
+                <span>Kolečko — přiblížení</span>
+            </div>
         </div>
         <div id="ui-section">
             <img src="logo.png" alt="Kreativní Balíčky" class="brand-logo">
@@ -1193,7 +1230,7 @@
 
             <div class="btn-row">
                 <button class="btn-action-white" onclick="doScreenshot()">Pořídit screenshot</button>
-                <button class="btn-action" onclick="do3DDownload()">Stáhnout 3D model</button>
+                <button class="btn-action" onclick="downloadPDF()">Stáhnout návrh (PDF)</button>
             </div>
             <button class="btn-poptat" onclick="openInquiry()">Nezávazně poptat →</button>
         </div>
@@ -1238,7 +1275,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+    
     <script>
 
         const S = 0.1;
@@ -1301,6 +1338,15 @@
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
+
+        
+        const hintEl = document.getElementById('canvas-hint');
+        controls.addEventListener('start', () => {
+            if (hintEl && !hintEl.classList.contains('hidden')) {
+                hintEl.classList.add('hidden');
+                setTimeout(() => hintEl.remove(), 700);
+            }
+        });
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.4));
         const dirL = new THREE.DirectionalLight(0xffffff, 0.6);
@@ -1452,11 +1498,168 @@
             addWall(hingeGroup, W - 2 * T, lipH, T, 0, -lipH / 2, D - T / 2 - 0.005, B);
         }
 
+        function addFixaceInserts() {
+            if (selectedFill !== 'fixace') return;
+            const { W, D, H, T } = getDims();
+
+            
+            const boxColorHex = document.getElementById('box-color').value;
+            const foamCol = new THREE.Color(boxColorHex).convertSRGBToLinear();
+            const foamDark = foamCol.clone().multiplyScalar(0.7);
+
+            const foamMat = new THREE.MeshStandardMaterial({ color: foamCol, roughness: 0.95 });
+            const holeMat = new THREE.MeshStandardMaterial({ color: foamDark, roughness: 0.92 });
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.06 });
+
+            const inset = T * 1.2;
+            const iW = W - 2 * T - 2 * inset;
+            const iD = D - 2 * T - 2 * inset;
+            const baseY = T;
+
+            
+            function circlePath(r, segs) {
+                const p = new THREE.Path();
+                for (let i = 0; i <= segs; i++) {
+                    const a = (i / segs) * Math.PI * 2;
+                    if (i === 0) p.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+                    else p.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                }
+                return p;
+            }
+
+            
+            function rrectPath(w, h, r, cx, cz) {
+                const p = new THREE.Path();
+                const hw = w / 2, hh = h / 2;
+                p.moveTo(cx - hw + r, cz - hh);
+                p.lineTo(cx + hw - r, cz - hh);
+                p.quadraticCurveTo(cx + hw, cz - hh, cx + hw, cz - hh + r);
+                p.lineTo(cx + hw, cz + hh - r);
+                p.quadraticCurveTo(cx + hw, cz + hh, cx + hw - r, cz + hh);
+                p.lineTo(cx - hw + r, cz + hh);
+                p.quadraticCurveTo(cx - hw, cz + hh, cx - hw, cz + hh - r);
+                p.lineTo(cx - hw, cz - hh + r);
+                p.quadraticCurveTo(cx - hw, cz - hh, cx - hw + r, cz - hh);
+                return p;
+            }
+
+            if (curType === 'lahev') {
+               
+                const foamH = H - T;
+                const radius = Math.min(iW, iD) * 0.38;
+
+               
+                const shape = new THREE.Shape();
+                shape.moveTo(-iW / 2, -iD / 2);
+                shape.lineTo(iW / 2, -iD / 2);
+                shape.lineTo(iW / 2, iD / 2);
+                shape.lineTo(-iW / 2, iD / 2);
+                shape.lineTo(-iW / 2, -iD / 2);
+
+                
+                shape.holes.push(circlePath(radius, 48));
+
+              
+                const extGeom = new THREE.ExtrudeGeometry(shape, { depth: foamH, bevelEnabled: false });
+                const foam = new THREE.Mesh(extGeom, [foamMat, holeMat]);
+                foam.rotation.x = -Math.PI / 2;
+                foam.position.set(0, baseY, 0);
+                foam.receiveShadow = true;
+                boxGroup.add(foam);
+
+               
+                const discGeom = new THREE.CircleGeometry(radius, 48);
+                const disc = new THREE.Mesh(discGeom, holeMat);
+                disc.rotation.x = -Math.PI / 2;
+                disc.position.set(0, baseY + 0.003, 0);
+                boxGroup.add(disc);
+
+              
+                const rimPts = [];
+                for (let a = 0; a <= Math.PI * 2 + 0.01; a += Math.PI / 24) {
+                    rimPts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
+                }
+                boxGroup.add(new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints(rimPts),
+                    new THREE.LineBasicMaterial({ color: 0x666666, transparent: true, opacity: 0.25 })
+                ).translateY(baseY + foamH + 0.002));
+
+            } else {
+                
+                const foamH = (H - T) * 0.68;
+                const r = iW * 0.02; 
+
+             
+                const divW = iW * 0.04;
+                const leftW = (iW - divW) * 0.55;
+                const rightW = (iW - divW) * 0.45;
+                const leftCx = -iW / 2 + leftW / 2;
+                const rightCx = iW / 2 - rightW / 2;
+
+              
+                const padW = iW * 0.04, padD = iD * 0.06;
+                const lCutW = leftW - 2 * padW, lCutD = iD - 2 * padD;
+                const rCutW = rightW - 2 * padW, rCutD = iD - 2 * padD;
+
+             
+                const shape = new THREE.Shape();
+                shape.moveTo(-iW / 2, -iD / 2);
+                shape.lineTo(iW / 2, -iD / 2);
+                shape.lineTo(iW / 2, iD / 2);
+                shape.lineTo(-iW / 2, iD / 2);
+                shape.lineTo(-iW / 2, -iD / 2);
+
+                
+                const lR = Math.min(lCutW, lCutD) * 0.12;
+                shape.holes.push(rrectPath(lCutW, lCutD, lR, leftCx, 0));
+
+               
+                const rR = Math.min(rCutW, rCutD) * 0.12;
+                shape.holes.push(rrectPath(rCutW, rCutD, rR, rightCx, 0));
+
+                
+                const extGeom = new THREE.ExtrudeGeometry(shape, { depth: foamH, bevelEnabled: false });
+                const foam = new THREE.Mesh(extGeom, [foamMat, holeMat]);
+                foam.rotation.x = -Math.PI / 2;
+                foam.position.set(0, baseY, 0);
+                foam.receiveShadow = true;
+                boxGroup.add(foam);
+
+                
+                function addTopRim(cw, cd, cr, cx) {
+                    const pts = rrectPath(cw, cd, cr, cx, 0).getPoints(40);
+                    const verts = pts.map(p => new THREE.Vector3(p.x, 0, p.y));
+                    verts.push(verts[0].clone());
+                    boxGroup.add(new THREE.Line(
+                        new THREE.BufferGeometry().setFromPoints(verts),
+                        new THREE.LineBasicMaterial({ color: 0x666666, transparent: true, opacity: 0.2 })
+                    ).translateY(baseY + foamH + 0.002));
+                }
+
+                addTopRim(lCutW, lCutD, lR, leftCx);
+                addTopRim(rCutW, rCutD, rR, rightCx);
+
+                
+                const outerPts = [
+                    new THREE.Vector3(-iW / 2, 0, -iD / 2),
+                    new THREE.Vector3(iW / 2, 0, -iD / 2),
+                    new THREE.Vector3(iW / 2, 0, iD / 2),
+                    new THREE.Vector3(-iW / 2, 0, iD / 2),
+                    new THREE.Vector3(-iW / 2, 0, -iD / 2)
+                ];
+                boxGroup.add(new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints(outerPts),
+                    edgeMat
+                ).translateY(baseY + foamH + 0.002));
+            }
+        }
+
         function rebuildBox() {
             clearBox();
             if (curType === 'zaklapeci') buildZaklapeci();
             else if (curType === 'dvoudilna') buildDvoudilna();
             else buildLahev();
+            addFixaceInserts();
             applySlider();
             handleRedraw();
             updateQuantityVisual();
@@ -1740,7 +1943,7 @@
 
 
         document.getElementById('open-slider').oninput = applySlider;
-        document.getElementById('box-color').oninput = handleRedraw;
+        document.getElementById('box-color').oninput = () => rebuildBox();
         document.getElementById('bg-color').oninput = e => {
             scene.background.set(e.target.value);
             document.getElementById('preview-section').style.background = e.target.value;
@@ -1829,8 +2032,8 @@
         updateInnerLidVisibility();
         buildSideChips();
         renderSideEditor();
-        rebuildBox();
         applyPrintAppearance();
+        rebuildBox();
 
         
         function updateQuantityVisual() {
@@ -1931,7 +2134,7 @@
                 document.querySelectorAll('.fill-cards .option-card').forEach(x => x.classList.remove('active'));
                 c.classList.add('active');
                 selectedFill = c.dataset.fill;
-                updatePrice();
+                rebuildBox();
             };
         });
 
@@ -1950,7 +2153,7 @@
                 colorWrap.style.pointerEvents = '';
                 lockNote.style.display = 'none';
             }
-            handleRedraw();
+            rebuildBox();
         }
 
         document.querySelectorAll('.print-cards .option-card').forEach(c => {
@@ -2096,16 +2299,123 @@
             }, 'image/png');
         }
 
-        function do3DDownload() {
-            const exporter = new THREE.GLTFExporter();
-            exporter.parse(boxGroup, buffer => {
-                const blob = new Blob([buffer], { type: 'application/octet-stream' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'krabicka.glb';
-                a.click();
-                URL.revokeObjectURL(a.href);
-            }, { binary: true });
+        function downloadPDF() {
+           
+            const origBg = scene.background.clone();
+            scene.background.set(0xffffff);
+            renderer.render(scene, camera);
+            const tmpCv = document.createElement('canvas');
+            const maxPx = 900;
+            const srcW = renderer.domElement.width, srcH = renderer.domElement.height;
+            const sc = Math.min(maxPx / srcW, maxPx / srcH, 1);
+            tmpCv.width = Math.round(srcW * sc);
+            tmpCv.height = Math.round(srcH * sc);
+            tmpCv.getContext('2d').drawImage(renderer.domElement, 0, 0, tmpCv.width, tmpCv.height);
+            const imgSrc = tmpCv.toDataURL('image/jpeg', 0.92);
+            scene.background.copy(origBg);
+            renderer.render(scene, camera);
+
+          
+            let logoSrc = '';
+            try {
+                const logoImg = document.querySelector('.brand-logo');
+                if (logoImg) {
+                    const lc = document.createElement('canvas');
+                    lc.width = logoImg.naturalWidth || 200;
+                    lc.height = logoImg.naturalHeight || 60;
+                    const lctx = lc.getContext('2d');
+                    lctx.drawImage(logoImg, 0, 0, lc.width, lc.height);
+                    logoSrc = lc.toDataURL('image/png');
+                }
+            } catch(e) { 
+                logoSrc = new URL('logo.png', window.location.href).href;
+            }
+
+          
+            const t = TYPES[curType], s = t.sizes[curSize];
+            const fillLabel = selectedFill === 'fixace' ? 'S fixací' : 'Bez fixace';
+            const printLabel = { basic: 'Basic', standard: 'Standard', deluxe: 'Deluxe' }[selectedPrint];
+            const qty = +document.getElementById('qty-slider').value;
+            const qtyLabel = qty >= 151 ? '150+' : qty;
+            const boxColor = document.getElementById('box-color').value;
+            const price = calcPrice();
+            const date = new Date().toLocaleDateString('cs-CZ');
+
+            const configRows = [
+                ['Typ krabičky', t.name],
+                ['Rozměr', s.label + ' cm'],
+                ['Výplň', fillLabel],
+                ['Potisk', printLabel],
+                ['Barva', `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:3px;background:${boxColor};border:1px solid #ddd;display:inline-block"></span>${boxColor.toUpperCase()}</span>`],
+                ['Počet kusů', qtyLabel]
+            ];
+
+            const priceRows = [
+                ['Cena za kus', price.unit.toFixed(0) + ' Kč'],
+                ['Celkem bez DPH', price.total.toFixed(0) + ' Kč']
+            ];
+
+            
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Návrh krabičky – Kreativní Balíčky</title>
+<style>
+@page { size: A4; margin: 0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #282828; width: 210mm; min-height: 297mm; margin: 0 auto; position: relative; }
+.header { background: #fff; padding: 20px 32px 16px; display: flex; align-items: center; justify-content: space-between; }
+.header-line { height: 3px; background: #f84b80; }
+.header .logo { height: 52px; }
+.header .date { font-size: 12px; color: #999; }
+.body { padding: 24px 32px; }
+.screenshot { width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; background: #fff; display: block; margin-bottom: 24px; overflow: hidden; }
+.section-head { background: #f5f5f5; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+td { padding: 5px 12px; font-size: 12px; border-bottom: 1px solid #f0f0f0; }
+td:first-child { color: #888; }
+td:last-child { text-align: right; font-weight: 600; }
+.total-row { background: #fef0f4; }
+.total-row td { color: #f84b80 !important; font-size: 15px; font-weight: 700; padding: 8px 12px; }
+.footer { border-top: 1px solid #eee; padding: 14px 32px 12px; display: flex; gap: 24px; font-size: 8px; color: #999; line-height: 1.5; position: absolute; bottom: 12px; left: 0; right: 0; justify-content: center; text-align: center; }
+.footer .col { flex: 1; }
+.footer .col b { color: #666; font-size: 8.5px; display: block; margin-bottom: 2px; }
+@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style></head><body>
+<div class="header">
+  ${logoSrc ? `<img class="logo" src="${logoSrc}">` : '<span style="font-size:18px;font-weight:700;color:#f84b80">Kreativní Balíčky</span>'}
+  <div class="date">${date}</div>
+</div>
+<div class="header-line"></div>
+<div class="body">
+  <img class="screenshot" src="${imgSrc}">
+  <div class="section-head">Konfigurace</div>
+  <table>${configRows.map(([l,v]) => `<tr><td>${l}</td><td>${v}</td></tr>`).join('')}</table>
+  <div class="section-head">Cenová kalkulace</div>
+  <table>
+    ${priceRows.map(([l,v]) => `<tr><td>${l}</td><td>${v}</td></tr>`).join('')}
+    <tr class="total-row"><td>Celkem vč. DPH 21 %</td><td>${price.totalVat.toFixed(0)} Kč</td></tr>
+  </table>
+  <p style="font-size:9px;color:#aaa;text-align:center;margin-top:4px;">Uvedené ceny jsou orientační a nezávazné. Finální cena se může lišit dle konkrétní specifikace zakázky.</p>
+</div>
+<div class="footer">
+  <div class="col">
+    <b>Fakturační údaje CZ</b>
+    Concierge Management s.r.o.<br>Ukrajinská 1487/2a<br>101 00 Praha 10<br>IČ: 24658928 · DIČ: CZ24658928
+  </div>
+  <div class="col">
+    <b>Kontaktní adresa</b>
+    We Are Creative Agency<br>Ctiradova 1745/12<br>140 00 Praha 4, Nusle<br>604 604 643<br>info@wearecreativeagency.com
+  </div>
+  <div class="col">
+    <b>Fakturační údaje SK</b>
+    Concierge Management SK s.r.o.<br>Janka Palu 52/8<br>914 41 Nemšová<br>IČ: 53077831 · DIČ: SK2121273143
+  </div>
+</div>
+</body></html>`;
+
+            const w = window.open('', '_blank');
+            w.document.write(html);
+            w.document.close();
+            w.onload = () => { w.focus(); w.print(); };
         }
     </script>
 </body>
