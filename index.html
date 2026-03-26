@@ -2347,17 +2347,76 @@
             closeLeadGate();
         }
 
-        function submitInquiry() {
+        function getInquiryData(name, email, phone, gdpr, services = []) {
+            const t = TYPES[curType], s = t.sizes[curSize];
+            const { unit, total } = calcPrice();
+            const qty = +document.getElementById('qty-slider').value;
+            const qtyLabel = qty >= 151 ? '150+' : qty;
+            const boxColor = document.getElementById('box-color').value;
+
+            return {
+                name, email, phone, gdpr, services,
+                config: {
+                    type: t.name,
+                    size: s.label + ' cm',
+                    color: boxColor.toUpperCase(),
+                    fill: selectedFill === 'fixace' ? 'S fixací' : 'Bez fixace',
+                    print: { basic: 'Basic', standard: 'Standard', deluxe: 'Deluxe' }[selectedPrint],
+                    qty: qtyLabel,
+                    total: total.toFixed(0) + ' Kč bez DPH'
+                }
+            };
+        }
+
+        async function submitInquiry() {
             const gdprEl = document.getElementById('inq-gdpr');
-            if (!gdprEl.checked) {
-                const lbl = gdprEl.closest('.inq-gdpr');
-                lbl.style.color = 'var(--accent)';
-                setTimeout(() => lbl.style.color = '', 2200);
+            const name = document.getElementById('inq-name').value.trim();
+            const email = document.getElementById('inq-email').value.trim();
+            const phone = document.getElementById('inq-phone').value.trim();
+
+            if (!name || !email || !gdprEl.checked) {
+                if (!gdprEl.checked) {
+                    const lbl = gdprEl.closest('.inq-gdpr');
+                    lbl.style.color = 'var(--accent)';
+                    setTimeout(() => lbl.style.color = '', 2200);
+                }
+                alert('Prosím vyplňte jméno, e-mail a potvrďte souhlas.');
                 return;
             }
-           
-            alert('Děkujeme! Brzy se vám ozveme.');
-            closeInquiry();
+
+            const services = [];
+            if (document.getElementById('inq-c1').checked) services.push('Jen výroba');
+            if (document.getElementById('inq-c2').checked) services.push('Zabalení obsahu');
+            if (document.getElementById('inq-c3').checked) services.push('Doručení na adresy');
+
+            const data = getInquiryData(name, email, phone, true, services);
+            const btn = document.querySelector('#ui-inquiry .btn-action');
+            const origText = btn.innerText;
+
+            try {
+                btn.innerText = 'Odesílám...';
+                btn.disabled = true;
+
+                const resp = await fetch('mail.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await resp.json();
+                if (res.success) {
+                    alert('Děkujeme! Vaše poptávka byla úspěšně odeslána. Brzy se vám ozveme.');
+                    closeInquiry();
+                } else {
+                    throw new Error(res.error || 'Chyba při odesílání');
+                }
+            } catch (e) {
+                alert('Omlouváme se, poptávku se nepodařilo odeslat. Zkuste to prosím znovu nebo nás kontaktujte napřímo.');
+                console.error(e);
+            } finally {
+                btn.innerText = origText;
+                btn.disabled = false;
+            }
         }
 
         let pendingDownload = null;
@@ -2376,9 +2435,10 @@
                 document.getElementById('inquiry-backdrop').classList.remove('show');
             }
         }
-        function submitLeadGate() {
+        async function submitLeadGate() {
             const name = document.getElementById('gate-name').value.trim();
             const email = document.getElementById('gate-email').value.trim();
+            const phone = document.getElementById('gate-phone').value.trim();
             const gdpr = document.getElementById('gate-gdpr').checked;
 
             if (!name || !email || !gdpr) {
@@ -2391,10 +2451,29 @@
                 return;
             }
 
-            window.leadCaptured = true;
-            closeLeadGate();
-            if (pendingDownload === 'screenshot') doScreenshotFinal();
-            else if (pendingDownload === 'pdf') downloadPDFFinal();
+            const data = getInquiryData(name, email, phone, true, ['Stažení návrhu (' + pendingDownload.toUpperCase() + ')']);
+            const btn = document.querySelector('#ui-lead-gate .btn-action');
+            const origText = btn.innerText;
+
+            try {
+                btn.innerText = 'Zpracovávám...';
+                btn.disabled = true;
+
+                // Odeslání leadu na pozadí, nečekáme na výsledek pro pokračování ke stažení (pro lepší UX)
+                fetch('mail.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).catch(err => console.error('Lead capture failed:', err));
+
+                window.leadCaptured = true;
+                closeLeadGate();
+                if (pendingDownload === 'screenshot') doScreenshotFinal();
+                else if (pendingDownload === 'pdf') downloadPDFFinal();
+            } finally {
+                btn.innerText = origText;
+                btn.disabled = false;
+            }
         }
 
         function addWatermarkToCanvas(canvas) {
